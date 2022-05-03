@@ -1415,6 +1415,10 @@ contract NftStaking is Ownable, IERC721Receiver, ReentrancyGuard, Pausable {
         require(!(address(msg.sender).isContract()) && tx.origin == msg.sender, "No Contracts Allowed!");
         _;
     }
+
+    event RateChanged(uint256 newRate);
+    event ExpirationChanged(uint256 newExpiration);
+    event LockTimeChanged(uint newLockTime);
   
     // mappings 
     mapping(address => EnumerableSet.UintSet) private _deposits;
@@ -1447,11 +1451,19 @@ contract NftStaking is Ownable, IERC721Receiver, ReentrancyGuard, Pausable {
     // Set a multiplier for how many tokens to earn each time a block passes.
     function setRate(uint256 _rate) public onlyOwner() {
       rate = _rate;
+      emit RateChanged(rate);
     }
 
     // Set this to a block to disable the ability to continue accruing tokens past that block number.
     function setExpiration(uint256 _expiration) public onlyOwner() {
       expiration = block.number + _expiration;
+      emit ExpirationChanged(expiration);
+    }
+
+    //Set Lock Time
+    function setLockTime(uint _lockTime) public onlyOwner() {
+      LOCKUP_TIME = _lockTime;
+      emit LockTimeChanged(LOCKUP_TIME);
     }
 
     //check deposit amount. 
@@ -1496,7 +1508,7 @@ contract NftStaking is Ownable, IERC721Receiver, ReentrancyGuard, Pausable {
       view 
       returns (uint256) 
     {
-      require(Math.min(block.number, expiration) > _depositBlocks[account][tokenId], "Invalid blocks");
+      // require(Math.min(block.number, expiration) > _depositBlocks[account][tokenId], "Invalid blocks");
       return rate * 
           (_deposits[account].contains(tokenId) ? 1 : 0) * 
           (Math.min(block.number, expiration) - 
@@ -1514,13 +1526,14 @@ contract NftStaking is Ownable, IERC721Receiver, ReentrancyGuard, Pausable {
       }
 
       if (reward > 0) {
-        IERC20(erc20Address).transfer(msg.sender, reward);
+        require(IERC20(erc20Address).transfer(msg.sender, reward), "Could not transfer Reward Token!");
       }
     }
 
     //deposit function. 
-    function deposit(uint256[] calldata tokenIds) external whenNotPaused noContractsAllowed {
+    function deposit(uint256[] calldata tokenIds) external whenNotPaused noContractsAllowed nonReentrant() {
         require(msg.sender != stakingDestinationAddress, "Invalid address");
+        require(block.number < expiration, "Staking has finished, no more deposits!");
         claimRewards(tokenIds);
 
         for (uint256 i; i < tokenIds.length; i++) {
@@ -1560,10 +1573,31 @@ contract NftStaking is Ownable, IERC721Receiver, ReentrancyGuard, Pausable {
         }
     }
 
+    //withdraw without caring about Rewards
+    function emergencyWithdraw(uint256[] calldata tokenIds) external noContractsAllowed nonReentrant() {
+        require(block.timestamp.sub(stakingTime[msg.sender]) > LOCKUP_TIME, "You recently staked, please wait before withdrawing.");
+        
+        for (uint256 i; i < tokenIds.length; i++) {
+            require(
+                _deposits[msg.sender].contains(tokenIds[i]),
+                "Staking: token not deposited"
+            );
+
+            _deposits[msg.sender].remove(tokenIds[i]);
+
+            IERC721(stakingDestinationAddress).safeTransferFrom(
+                address(this),
+                msg.sender,
+                tokenIds[i],
+                ""
+            );
+        }
+    }
+
     //withdrawal function.
     function withdrawTokens() external onlyOwner {
         uint256 tokenSupply = IERC20(erc20Address).balanceOf(address(this));
-        IERC20(erc20Address).transfer(msg.sender, tokenSupply);
+        require(IERC20(erc20Address).transfer(msg.sender, tokenSupply), "Could not transfer Reward Token!");
     }
 
     // Prevent sending ERC721 tokens directly to this contract
