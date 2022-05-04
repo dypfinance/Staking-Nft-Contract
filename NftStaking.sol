@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
 
 pragma solidity ^0.8.0;
 
@@ -22,7 +23,11 @@ abstract contract Context {
     }
 }
 
+// OpenZeppelin Contracts v4.4.1 (access/Ownable.sol)
+
 pragma solidity ^0.8.0;
+
+//import "../utils/Context.sol";
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -45,7 +50,7 @@ abstract contract Ownable is Context {
      * @dev Initializes the contract setting the deployer as the initial owner.
      */
     constructor() {
-        _setOwner(_msgSender());
+        _transferOwnership(_msgSender());
     }
 
     /**
@@ -71,7 +76,7 @@ abstract contract Ownable is Context {
      * thereby removing any functionality that is only available to the owner.
      */
     function renounceOwnership() public virtual onlyOwner {
-        _setOwner(address(0));
+        _transferOwnership(address(0));
     }
 
     /**
@@ -80,16 +85,21 @@ abstract contract Ownable is Context {
      */
     function transferOwnership(address newOwner) public virtual onlyOwner {
         require(newOwner != address(0), "Ownable: new owner is the zero address");
-        _setOwner(newOwner);
+        _transferOwnership(newOwner);
     }
 
-    function _setOwner(address newOwner) private {
+    /**
+     * @dev Transfers ownership of the contract to a new account (`newOwner`).
+     * Internal function without access restriction.
+     */
+    function _transferOwnership(address newOwner) internal virtual {
         address oldOwner = _owner;
         _owner = newOwner;
         emit OwnershipTransferred(oldOwner, newOwner);
     }
 }
 
+// OpenZeppelin Contracts (last updated v4.6.0) (utils/math/SafeMath.sol)
 
 pragma solidity ^0.8.0;
 
@@ -100,7 +110,7 @@ pragma solidity ^0.8.0;
 /**
  * @dev Wrappers over Solidity's arithmetic operations.
  *
- * NOTE: `SafeMath` is no longer needed starting with Solidity 0.8. The compiler
+ * NOTE: `SafeMath` is generally not needed starting with Solidity 0.8, since the compiler
  * now has built in overflow checking.
  */
 library SafeMath {
@@ -118,7 +128,7 @@ library SafeMath {
     }
 
     /**
-     * @dev Returns the substraction of two unsigned integers, with an overflow flag.
+     * @dev Returns the subtraction of two unsigned integers, with an overflow flag.
      *
      * _Available since v3.4._
      */
@@ -316,6 +326,8 @@ library SafeMath {
     }
 }
 
+// OpenZeppelin Contracts v4.4.1 (utils/introspection/IERC165.sol)
+
 pragma solidity ^0.8.0;
 
 /**
@@ -339,7 +351,11 @@ interface IERC165 {
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
 }
 
+// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC721/IERC721.sol)
+
 pragma solidity ^0.8.0;
+
+//import "../../utils/introspection/IERC165.sol";
 
 /**
  * @dev Required interface of an ERC721 compliant contract.
@@ -373,6 +389,26 @@ interface IERC721 is IERC165 {
      * - `tokenId` must exist.
      */
     function ownerOf(uint256 tokenId) external view returns (address owner);
+
+    /**
+     * @dev Safely transfers `tokenId` token from `from` to `to`.
+     *
+     * Requirements:
+     *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `tokenId` token must exist and be owned by `from`.
+     * - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}.
+     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
+     *
+     * Emits a {Transfer} event.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes calldata data
+    ) external;
 
     /**
      * @dev Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients
@@ -430,15 +466,6 @@ interface IERC721 is IERC165 {
     function approve(address to, uint256 tokenId) external;
 
     /**
-     * @dev Returns the account approved for `tokenId` token.
-     *
-     * Requirements:
-     *
-     * - `tokenId` must exist.
-     */
-    function getApproved(uint256 tokenId) external view returns (address operator);
-
-    /**
      * @dev Approve or remove `operator` as an operator for the caller.
      * Operators can call {transferFrom} or {safeTransferFrom} for any token owned by the caller.
      *
@@ -451,34 +478,27 @@ interface IERC721 is IERC165 {
     function setApprovalForAll(address operator, bool _approved) external;
 
     /**
+     * @dev Returns the account approved for `tokenId` token.
+     *
+     * Requirements:
+     *
+     * - `tokenId` must exist.
+     */
+    function getApproved(uint256 tokenId) external view returns (address operator);
+
+    /**
      * @dev Returns if the `operator` is allowed to manage all of the assets of `owner`.
      *
      * See {setApprovalForAll}
      */
     function isApprovedForAll(address owner, address operator) external view returns (bool);
-
-    /**
-     * @dev Safely transfers `tokenId` token from `from` to `to`.
-     *
-     * Requirements:
-     *
-     * - `from` cannot be the zero address.
-     * - `to` cannot be the zero address.
-     * - `tokenId` token must exist and be owned by `from`.
-     * - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}.
-     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
-     *
-     * Emits a {Transfer} event.
-     */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes calldata data
-    ) external;
 }
 
+// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC721/extensions/IERC721Enumerable.sol)
+
 pragma solidity ^0.8.0;
+
+//import "../IERC721.sol";
 
 /**
  * @title ERC-721 Non-Fungible Token Standard, optional enumeration extension
@@ -494,7 +514,7 @@ interface IERC721Enumerable is IERC721 {
      * @dev Returns a token ID owned by `owner` at a given `index` of its token list.
      * Use along with {balanceOf} to enumerate all of ``owner``'s tokens.
      */
-    function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256 tokenId);
+    function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256);
 
     /**
      * @dev Returns a token ID at a given `index` of all the tokens stored by the contract.
@@ -503,6 +523,7 @@ interface IERC721Enumerable is IERC721 {
     function tokenByIndex(uint256 index) external view returns (uint256);
 }
 
+// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC721/IERC721Receiver.sol)
 
 pragma solidity ^0.8.0;
 
@@ -519,7 +540,7 @@ interface IERC721Receiver {
      * It must return its Solidity selector to confirm the token transfer.
      * If any other value is returned or the interface is not implemented by the recipient, the transfer will be reverted.
      *
-     * The selector can be obtained in Solidity with `IERC721.onERC721Received.selector`.
+     * The selector can be obtained in Solidity with `IERC721Receiver.onERC721Received.selector`.
      */
     function onERC721Received(
         address operator,
@@ -529,6 +550,7 @@ interface IERC721Receiver {
     ) external returns (bytes4);
 }
 
+// OpenZeppelin Contracts (last updated v4.6.0) (utils/structs/EnumerableSet.sol)
 
 pragma solidity ^0.8.0;
 
@@ -612,12 +634,12 @@ library EnumerableSet {
             uint256 lastIndex = set._values.length - 1;
 
             if (lastIndex != toDeleteIndex) {
-                bytes32 lastvalue = set._values[lastIndex];
+                bytes32 lastValue = set._values[lastIndex];
 
                 // Move the last value to the index where the value to delete is
-                set._values[toDeleteIndex] = lastvalue;
+                set._values[toDeleteIndex] = lastValue;
                 // Update the index for the moved value
-                set._indexes[lastvalue] = valueIndex; // Replace lastvalue's index to valueIndex
+                set._indexes[lastValue] = valueIndex; // Replace lastValue's index to valueIndex
             }
 
             // Delete the slot where the moved value was stored
@@ -885,6 +907,7 @@ library EnumerableSet {
     }
 }
 
+// OpenZeppelin Contracts v4.4.1 (security/ReentrancyGuard.sol)
 
 pragma solidity ^0.8.0;
 
@@ -929,7 +952,7 @@ abstract contract ReentrancyGuard {
      * @dev Prevents a contract from calling itself, directly or indirectly.
      * Calling a `nonReentrant` function from another `nonReentrant`
      * function is not supported. It is possible to prevent this from happening
-     * by making the `nonReentrant` function external, and make it call a
+     * by making the `nonReentrant` function external, and making it call a
      * `private` function that does the actual work.
      */
     modifier nonReentrant() {
@@ -947,6 +970,7 @@ abstract contract ReentrancyGuard {
     }
 }
 
+// OpenZeppelin Contracts (last updated v4.5.0) (utils/math/Math.sol)
 
 pragma solidity ^0.8.0;
 
@@ -989,8 +1013,11 @@ library Math {
     }
 }
 
+// OpenZeppelin Contracts v4.4.1 (security/Pausable.sol)
 
 pragma solidity ^0.8.0;
+
+//import "../utils/Context.sol";
 
 /**
  * @dev Contract module which allows children to implement an emergency stop
@@ -1077,6 +1104,7 @@ abstract contract Pausable is Context {
     }
 }
 
+// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/IERC20.sol)
 
 pragma solidity ^0.8.0;
 
@@ -1084,6 +1112,20 @@ pragma solidity ^0.8.0;
  * @dev Interface of the ERC20 standard as defined in the EIP.
  */
 interface IERC20 {
+    /**
+     * @dev Emitted when `value` tokens are moved from one account (`from`) to
+     * another (`to`).
+     *
+     * Note that `value` may be zero.
+     */
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
+    /**
+     * @dev Emitted when the allowance of a `spender` for an `owner` is set by
+     * a call to {approve}. `value` is the new allowance.
+     */
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+
     /**
      * @dev Returns the amount of tokens in existence.
      */
@@ -1095,13 +1137,13 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 
     /**
-     * @dev Moves `amount` tokens from the caller's account to `recipient`.
+     * @dev Moves `amount` tokens from the caller's account to `to`.
      *
      * Returns a boolean value indicating whether the operation succeeded.
      *
      * Emits a {Transfer} event.
      */
-    function transfer(address recipient, uint256 amount) external returns (bool);
+    function transfer(address to, uint256 amount) external returns (bool);
 
     /**
      * @dev Returns the remaining number of tokens that `spender` will be
@@ -1129,7 +1171,7 @@ interface IERC20 {
     function approve(address spender, uint256 amount) external returns (bool);
 
     /**
-     * @dev Moves `amount` tokens from `sender` to `recipient` using the
+     * @dev Moves `amount` tokens from `from` to `to` using the
      * allowance mechanism. `amount` is then deducted from the caller's
      * allowance.
      *
@@ -1138,25 +1180,13 @@ interface IERC20 {
      * Emits a {Transfer} event.
      */
     function transferFrom(
-        address sender,
-        address recipient,
+        address from,
+        address to,
         uint256 amount
     ) external returns (bool);
-
-    /**
-     * @dev Emitted when `value` tokens are moved from one account (`from`) to
-     * another (`to`).
-     *
-     * Note that `value` may be zero.
-     */
-    event Transfer(address indexed from, address indexed to, uint256 value);
-
-    /**
-     * @dev Emitted when the allowance of a `spender` for an `owner` is set by
-     * a call to {approve}. `value` is the new allowance.
-     */
-    event Approval(address indexed owner, address indexed spender, uint256 value);
 }
+
+// OpenZeppelin Contracts (last updated v4.5.0) (utils/Address.sol)
 
 pragma solidity ^0.8.1;
 
@@ -1515,8 +1545,8 @@ contract NftStaking is Ownable, IERC721Receiver, ReentrancyGuard, Pausable {
             _depositBlocks[account][tokenId]);
     }
 
-    //reward claim function 
-    function claimRewards(uint256[] calldata tokenIds) public whenNotPaused noContractsAllowed {
+    //Update Account and Auto-claim 
+    function updateAccount(uint256[] calldata tokenIds) private {
       uint256 reward; 
       uint256 blockCur = Math.min(block.number, expiration);
 
@@ -1530,11 +1560,16 @@ contract NftStaking is Ownable, IERC721Receiver, ReentrancyGuard, Pausable {
       }
     }
 
+    //Reward claim function
+    function claimRewards(uint256[] calldata tokenIds) external whenNotPaused noContractsAllowed nonReentrant(){
+      updateAccount(tokenIds);
+    }
+
     //deposit function. 
     function deposit(uint256[] calldata tokenIds) external whenNotPaused noContractsAllowed nonReentrant() {
         require(msg.sender != stakingDestinationAddress, "Invalid address");
         require(block.number < expiration, "Staking has finished, no more deposits!");
-        claimRewards(tokenIds);
+        updateAccount(tokenIds);
 
         for (uint256 i; i < tokenIds.length; i++) {
             IERC721(stakingDestinationAddress).safeTransferFrom(
@@ -1554,7 +1589,7 @@ contract NftStaking is Ownable, IERC721Receiver, ReentrancyGuard, Pausable {
 
     	require(block.timestamp.sub(stakingTime[msg.sender]) > LOCKUP_TIME, "You recently staked, please wait before withdrawing.");
 
-        claimRewards(tokenIds);
+        updateAccount(tokenIds);
 
         for (uint256 i; i < tokenIds.length; i++) {
             require(
